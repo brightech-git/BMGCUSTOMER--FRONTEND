@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "BMG CUSTOMER",
+    "slug": "BMG-CUSTOMER",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/BMG.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/BMG.png",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE"
+      },
+      "package": "com.swagen.BMGCUSTOMER"
+    },
+    "web": {
+      "favicon": "./assets/BMG.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6c628c15-e3a6-46ee-87ac-d8d2894e4c71"
+      }
+    },
+    "plugins": [
+      "expo-sharing"
+    ]
+  }
+}

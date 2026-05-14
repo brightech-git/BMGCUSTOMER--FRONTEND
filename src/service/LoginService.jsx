@@ -11,8 +11,10 @@ export const LoginService = {
       };
 
       const response = await axiosInstance.post("/achead/login", payload);
+      console.log("Login Response:", response.data);
 
       return response.data;
+      
 
     } catch (error) {
 

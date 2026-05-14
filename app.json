@@ -1,35 +1,55 @@
 {
   "expo": {
-    "name": "BMG CUSTOMER",
-    "slug": "BMG-CUSTOMER",
+    "name": "BMG_CUSTOMER",
+    "slug": "BMG_CUSTOMER",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/BMG.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/BMG.png",
-      "resizeMode": "contain"
-    },
+    "scheme": "bmgcustomer",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/BMG.png",
+        "backgroundImage": "./assets/BMG.png",
+        "monochromeImage": "./assets/BMG.png"
       },
-      "package": "com.swagen.BMGCUSTOMER"
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.sugibalan.BMG_CUSTOMER"
     },
     "web": {
+      "output": "static",
       "favicon": "./assets/BMG.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "6c628c15-e3a6-46ee-87ac-d8d2894e4c71"
-      }
-    },
     "plugins": [
-      "expo-sharing",
-      "expo-image"
-    ]
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/BMG.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "30100d0b-8495-424f-a7e5-cb0512fc9914"
+      }
+    }
   }
 }

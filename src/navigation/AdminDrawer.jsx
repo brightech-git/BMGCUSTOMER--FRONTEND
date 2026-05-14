@@ -1,24 +1,36 @@
-// navigation/AdminDrawer.js
+// src/navigation/AdminDrawer.js
 import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Image, Alert } from "react-native";
+import { router, useRouter } from "expo-router";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Image,
+  Alert,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
 
-import CustomerList from "../screens/CustomerList";
-import CreateUser from "../screens/CreateUser";
+import CustomerList from "../../app/(admin)/customer-list";
+import CreateUser from "../../app/(admin)/create-user";
+import Home from "../../app/(admin)/home";
 
-const { width } = Dimensions.get("window");
 const Drawer = createDrawerNavigator();
-const logo = require("../assets/logo.png");
+const { width } = Dimensions.get("window");
+const logo = require("../../assets/logo.png");
 
-function CustomAdminDrawerContent(props) {
+// Custom Drawer Content Component
+function CustomDrawerContent(props) {
   const { state, navigation } = props;
   const currentRoute = state.routes[state.index].name;
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
+  const expoRouter = useRouter();
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     Alert.alert(
       "Logout",
       "Are you sure you want to logout?",
@@ -27,7 +39,20 @@ function CustomAdminDrawerContent(props) {
         {
           text: "Logout",
           onPress: async () => {
-            await logout();
+            try {
+              // Clear auth state
+              await logout();
+              
+              // Close the drawer
+              navigation.closeDrawer();
+              
+              // Use expo-router to navigate to login
+              expoRouter.replace("/login");
+              
+            } catch (error) {
+              console.log("Logout error:", error);
+              Alert.alert("Error", "Failed to logout. Please try again.");
+            }
           },
         },
       ]
@@ -47,20 +72,52 @@ function CustomAdminDrawerContent(props) {
         </View>
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{user?.name || "Administrator"}</Text>
-          <Text style={styles.userAccode}>Admin Access</Text>
+          <Text style={styles.userAccode}>
+            {isAdmin ? "Admin Access" : "User Access"}
+          </Text>
         </View>
       </LinearGradient>
 
       <View style={styles.menuSection}>
-        <Text style={styles.sectionTitle}>ADMIN MENU</Text>
+        <Text style={styles.sectionTitle}>MENU</Text>
 
+        {/* Home Menu Item */}
         <TouchableOpacity
           style={[
             styles.drawerItem,
-            currentRoute === "CustomerList" && styles.activeDrawerItem,
+            currentRoute === "home" && styles.activeDrawerItem,
           ]}
           onPress={() => {
-            navigation.navigate("CustomerList");
+            navigation.navigate("home");
+            navigation.closeDrawer();
+          }}
+        >
+          <View style={styles.drawerItemContent}>
+            <Icon
+              name="home"
+              size={22}
+              color={currentRoute === "home" ? "#DC2626" : "#666"}
+              style={styles.itemIcon}
+            />
+            <Text
+              style={[
+                styles.drawerItemText,
+                currentRoute === "home" && styles.activeDrawerItemText,
+              ]}
+            >
+              Home
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Customer List Menu Item */}
+        <TouchableOpacity
+          style={[
+            styles.drawerItem,
+            currentRoute === "customer-list" && styles.activeDrawerItem,
+          ]}
+          onPress={() => {
+            navigation.navigate("customer-list");
             navigation.closeDrawer();
           }}
         >
@@ -68,13 +125,13 @@ function CustomAdminDrawerContent(props) {
             <Icon
               name="people"
               size={22}
-              color={currentRoute === "CustomerList" ? "#cf1f1f" : "#666"}
+              color={currentRoute === "customer-list" ? "#DC2626" : "#666"}
               style={styles.itemIcon}
             />
             <Text
               style={[
                 styles.drawerItemText,
-                currentRoute === "CustomerList" && styles.activeDrawerItemText,
+                currentRoute === "customer-list" && styles.activeDrawerItemText,
               ]}
             >
               Customer List
@@ -82,42 +139,42 @@ function CustomAdminDrawerContent(props) {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.drawerItem,
-            currentRoute === "CreateUser" && styles.activeDrawerItem,
-          ]}
-          onPress={() => {
-            navigation.navigate("CreateUser");
-            navigation.closeDrawer();
-          }}
-        >
-          <View style={styles.drawerItemContent}>
-            <Icon
-              name="person-add"
-              size={22}
-              color={currentRoute === "CreateUser" ? "#DC2626" : "#666"}
-              style={styles.itemIcon}
-            />
-            <Text
-              style={[
-                styles.drawerItemText,
-                currentRoute === "CreateUser" && styles.activeDrawerItemText,
-              ]}
-            >
-              Create User
-            </Text>
-          </View>
-        </TouchableOpacity>
+        {/* Create User Menu Item - Only for Admin */}
+        {isAdmin && (
+          <TouchableOpacity
+            style={[
+              styles.drawerItem,
+              currentRoute === "create-user" && styles.activeDrawerItem,
+            ]}
+            onPress={() => {
+              navigation.navigate("create-user");
+              navigation.closeDrawer();
+            }}
+          >
+            <View style={styles.drawerItemContent}>
+              <Icon
+                name="admin-panel-settings"
+                size={22}
+                color={currentRoute === "create-user" ? "#DC2626" : "#666"}
+                style={styles.itemIcon}
+              />
+              <Text
+                style={[
+                  styles.drawerItemText,
+                  currentRoute === "create-user" && styles.activeDrawerItemText,
+                ]}
+              >
+                Create User
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.bottomContainer}>
-        <TouchableOpacity 
-          style={styles.logoutButton} 
-          onPress={() => {
-            navigation.closeDrawer();
-            handleLogout();
-          }}
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
         >
           <Icon name="logout" size={20} color="#DC2626" />
           <Text style={styles.logoutText}>Logout</Text>
@@ -130,7 +187,7 @@ function CustomAdminDrawerContent(props) {
 export default function AdminDrawer() {
   return (
     <Drawer.Navigator
-      drawerContent={(props) => <CustomAdminDrawerContent {...props} />}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerStyle: { backgroundColor: "#f57600" },
         headerTintColor: "#fff",
@@ -139,15 +196,22 @@ export default function AdminDrawer() {
         headerTitleAlign: "center",
       }}
     >
-      <Drawer.Screen 
-        name="CustomerList" 
-        component={CustomerList} 
-        options={{ title: "Customer List" }} 
+      <Drawer.Screen
+        name="home"
+        component={Home}
+        options={{ title: "Home" }}
       />
-      <Drawer.Screen 
-        name="CreateUser" 
-        component={CreateUser} 
-        options={{ title: "Create User" }} 
+
+      <Drawer.Screen
+        name="customer-list"
+        component={CustomerList}
+        options={{ title: "Customer List" }}
+      />
+
+      <Drawer.Screen
+        name="create-user"
+        component={CreateUser}
+        options={{ title: "Create User" }}
       />
     </Drawer.Navigator>
   );

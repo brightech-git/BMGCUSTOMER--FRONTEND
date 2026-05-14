@@ -1,5 +1,7 @@
 import { axiosInstance } from "../api/axiosInstance";
 
+
+
 export const CustomerService = {
 
   // GET ALL CUSTOMERS
@@ -23,9 +25,10 @@ export const CustomerService = {
   // SAVE CUSTOMER
   saveCustomer: async (customerData) => {
     try {
-
+console.log("Save Customer Response:",customerData);  
       const response = await axiosInstance.post("/customer", customerData);
 
+      console.log("Save Customer Response:", response.data);  
       return response.data;
 
     } catch (error) {

@@ -1,42 +1,26 @@
-// navigation/UserDrawer.js
-import React, { useState, useEffect } from "react";
-import {
-  createDrawerNavigator,
-  DrawerContentScrollView,
-} from "@react-navigation/drawer";
+// src/navigation/UserDrawer.js
+import { Drawer } from "expo-router/drawer";
+import { useRouter } from "expo-router";  // ← IMPORTANT: Import useRouter
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   Image,
   Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
-import { useAuth } from "../contexts/AuthContext"; // ← Import from contexts
+import { useAuth } from "../contexts/AuthContext";
 
-import Customer from "../screens/Customer";
-import City from "../screens/City";
-
-const { width } = Dimensions.get("window");
-const Drawer = createDrawerNavigator();
-const logo = require("../assets/logo.png");
+const logo = require("../../assets/logo.png");
 
 function CustomDrawerContent(props) {
-  const { state, navigation } = props;
-  const currentRoute = state.routes[state.index].name;
-  const { user, logout } = useAuth(); // ← Use auth context
-  const [userName, setUserName] = useState("User");
+  const { navigation } = props;
+  const { user, logout } = useAuth();
+  const router = useRouter();  // ← Initialize router
 
-  useEffect(() => {
-    if (user) {
-      setUserName(user.name || "User");
-    }
-  }, [user]);
-
-  const handleLogout = async () => {
+  const handleLogout = () => {
     Alert.alert(
       "Logout",
       "Are you sure you want to logout?",
@@ -44,108 +28,57 @@ function CustomDrawerContent(props) {
         { text: "Cancel", style: "cancel" },
         {
           text: "Logout",
+          style: "destructive",
           onPress: async () => {
-            await logout();
-            // Navigation will be handled automatically
+            try {
+              // Clear auth state
+              await logout();
+              
+              // Close drawer
+              navigation.closeDrawer();
+              
+              // Navigate to login using expo-router
+              router.replace("/login");
+              
+            } catch (e) {
+              console.log("Logout error:", e);
+              Alert.alert("Error", "Failed to logout. Please try again.");
+            }
           },
         },
       ]
     );
   };
 
-  const goToAdminLogin = () => {
-    navigation.navigate("AdminLogin");
-  };
-
   return (
     <View style={styles.container}>
       <LinearGradient
         colors={["#F97316", "#FB923C"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <View style={styles.logoWrapper}>
-          <Image source={logo} style={styles.headerLogo} resizeMode="contain" />
-        </View>
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>Welcome! {userName}</Text>
-          
-        </View>
+
+        <Text style={styles.welcomeText}>Welcome {user?.name || "User"}</Text>
       </LinearGradient>
 
-      <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>MAIN MENU</Text>
-
-          <TouchableOpacity
-            style={[
-              styles.drawerItem,
-              currentRoute === "Customer" && styles.activeDrawerItem,
-            ]}
-            onPress={() => {
-              navigation.navigate("Customer");
-              navigation.closeDrawer();
-            }}
-          >
-            <View style={styles.drawerItemContent}>
-              <Icon
-                name="person-add"
-                size={22}
-                color={currentRoute === "Customer" ? "#F97316" : "#666"}
-                style={styles.itemIcon}
-              />
-              <Text
-                style={[
-                  styles.drawerItemText,
-                  currentRoute === "Customer" && styles.activeDrawerItemText,
-                ]}
-              >
-                Create Customer
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.drawerItem,
-              currentRoute === "City" && styles.activeDrawerItem,
-            ]}
-            onPress={() => {
-              navigation.navigate("City");
-              navigation.closeDrawer();
-            }}
-          >
-            <View style={styles.drawerItemContent}>
-              <Icon
-                name="location-city"
-                size={22}
-                color={currentRoute === "City" ? "#F97316" : "#666"}
-                style={styles.itemIcon}
-              />
-              <Text
-                style={[
-                  styles.drawerItemText,
-                  currentRoute === "City" && styles.activeDrawerItemText,
-                ]}
-              >
-                Create City
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </DrawerContentScrollView>
-
-      <View style={styles.bottomContainer}>
-
+      <View style={styles.menuSection}>
         <TouchableOpacity 
-          style={styles.logoutButton} 
+          style={styles.menuItem}
           onPress={() => {
+            router.push("/customer");
             navigation.closeDrawer();
-            handleLogout();
           }}
         >
-          <Icon name="logout" size={20} color="#F97316" />
+          <Icon name="person" size={24} color="#F97316" />
+          <Text style={styles.menuText}>Customer</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.bottomSection}>
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <Icon name="logout" size={24} color="#DC2626" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
@@ -155,157 +88,50 @@ function CustomDrawerContent(props) {
 
 export default function UserDrawer() {
   return (
-    <Drawer.Navigator
+    <Drawer
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerStyle: { backgroundColor: "#F97316" },
         headerTintColor: "#fff",
-        headerTitleStyle: { fontWeight: "bold" },
-        drawerStyle: { width: width * 0.8, backgroundColor: "#fff" },
         headerTitleAlign: "center",
       }}
     >
-      <Drawer.Screen 
-        name="Customer" 
-        component={Customer} 
-        options={{ title: "Create Customer" }} 
-      />
-      <Drawer.Screen 
-        name="City" 
-        component={City} 
-        options={{ title: "Create City" }} 
-      />
-    </Drawer.Navigator>
+      <Drawer.Screen name="customer" options={{ title: "Customer" }} />
+    </Drawer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#fff" 
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
   header: {
-    paddingVertical: 30,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    padding: 30,
     alignItems: "center",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  logoWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    overflow: "hidden",
-  },
-  headerLogo: { 
-    width: 60, 
-    height: 60 
-  },
-  userInfo: { 
-    alignItems: "center" 
-  },
-  userName: { 
-    color: "#fff", 
-    fontSize: 18, 
-    fontWeight: "bold", 
-    marginBottom: 4 
-  },
-  userAccode: { 
-    color: "rgba(255,255,255,0.8)", 
-    fontSize: 12 
-  },
-  scrollContent: { 
-    paddingTop: 10,
-    paddingBottom: 20,
-  },
-  menuSection: { 
-    marginTop: 10 
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#999",
-    marginLeft: 20,
-    marginBottom: 10,
-    letterSpacing: 1,
-  },
-  drawerItem: {
+  welcomeText: { color: "#fff", marginTop: 10, fontSize: 16, fontWeight: "bold" },
+  menuSection: { marginTop: 20, paddingHorizontal: 20 },
+  menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  menuText: { marginLeft: 15, fontSize: 16, color: "#333" },
+  bottomSection: {
+    marginTop: "auto",
     paddingHorizontal: 20,
-    marginHorizontal: 10,
-    marginVertical: 4,
-    borderRadius: 12,
-  },
-  drawerItemContent: { 
-    flexDirection: "row", 
-    alignItems: "center" 
-  },
-  activeDrawerItem: {
-    backgroundColor: "rgba(249, 115, 22, 0.1)",
-    borderLeftWidth: 3,
-    borderLeftColor: "#F97316",
-  },
-  itemIcon: { 
-    marginRight: 15 
-  },
-  drawerItemText: { 
-    fontSize: 15, 
-    color: "#444", 
-    fontWeight: "500" 
-  },
-  activeDrawerItemText: { 
-    color: "#F97316", 
-    fontWeight: "600" 
-  },
-  bottomContainer: { 
-    paddingHorizontal: 20, 
     paddingBottom: 30,
-    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
-  },
-  adminButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  adminText: { 
-    color: "#F97316", 
-    marginLeft: 10, 
-    fontSize: 15, 
-    fontWeight: "500" 
+    paddingTop: 20,
   },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
   },
-  logoutText: { 
-    color: "#F97316", 
-    marginLeft: 10, 
-    fontSize: 15, 
-    fontWeight: "500" 
-  },
+  logoutText: { marginLeft: 15, fontSize: 16, color: "#DC2626" },
 });

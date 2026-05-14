@@ -1,8 +1,8 @@
-// screens/AdminLogin.jsx
 import React, { useState } from "react";
 import {
   View,
   Text,
+  Animated,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -14,22 +14,20 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useAuth } from "../contexts/AuthContext";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../src/contexts/AuthContext";
+import { LoginService } from "../../src/service/LoginService";
 
-const logo = require("../assets/logo.png");
+const logo = require("../../assets/logo.png");
 
-export default function AdminLogin({ navigation }) {
+export default function LoginScreen() {
+  const router = useRouter();
+  const { login } = useAuth();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
-
-  // Static admin credentials
-  const ADMIN_CREDENTIALS = {
-    username: "BMG",
-    password: "BMG@123",
-  };
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -38,27 +36,33 @@ export default function AdminLogin({ navigation }) {
     }
 
     setLoading(true);
-
-    // Simulate API delay
-    setTimeout(async () => {
-      // Check static credentials
-      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        const adminData = {
-          name: "Administrator",
-          accode: "ADMIN001",
+    try {
+      const response = await LoginService.login(username, password);
+      
+      if (response.success) {
+        const userData = {
+          name: response.data.name,
+          accode: response.data.accode || "N/A",
           username: username,
-          role: "admin",
         };
         
-        const token = `admin_token_${Date.now()}`;
+        const token = response.data.token || `user_token_${Date.now()}`;
         
-        await login(adminData, token, "admin");
-        // Navigation will be handled automatically by AppNavigator
+        await login(userData, token, 'user');
+        router.replace("/(user)/customer");
       } else {
-        setLoading(false);
-        Alert.alert("Invalid Credentials", "Please check your admin username and password");
+        Alert.alert("Login Failed", response.message || "Invalid credentials");
       }
-    }, 1000);
+    } catch (error) {
+      console.log("Login error:", error);
+      Alert.alert("Error", "Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const goToAdminLogin = () => {
+    router.push("/admin-login");
   };
 
   return (
@@ -67,33 +71,26 @@ export default function AdminLogin({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <LinearGradient
-        colors={["#ee4705", "#554a0b"]}
+        colors={["#F97316", "#FB923C"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
         <View style={styles.content}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => navigation.goBack()}
-          >
-            <MaterialIcons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-
           <View style={styles.logoContainer}>
             <Image source={logo} style={styles.logo} resizeMode="contain" />
           </View>
 
-          <Text style={styles.title}>Admin Access</Text>
-          <Text style={styles.subtitle}>Secure Administrative Login</Text>
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Login to your account</Text>
 
           <View style={styles.card}>
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>USERNAME</Text>
               <View style={styles.inputContainer}>
-                <MaterialIcons name="admin-panel-settings" size={20} color="#ee4705" style={styles.inputIcon} />
+                <MaterialIcons name="person" size={20} color="#F97316" style={styles.inputIcon} />
                 <TextInput
-                  placeholder="Enter admin username"
+                  placeholder="Enter username"
                   placeholderTextColor="#999"
                   style={styles.input}
                   value={username}
@@ -107,7 +104,7 @@ export default function AdminLogin({ navigation }) {
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>PASSWORD</Text>
               <View style={styles.inputContainer}>
-                <MaterialIcons name="lock" size={20} color="#ee4705" style={styles.inputIcon} />
+                <MaterialIcons name="lock" size={20} color="#F97316" style={styles.inputIcon} />
                 <TextInput
                   placeholder="Enter password"
                   placeholderTextColor="#999"
@@ -137,13 +134,20 @@ export default function AdminLogin({ navigation }) {
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
                 <>
-                  <Text style={styles.loginButtonText}>Login as Admin</Text>
-                  <MaterialIcons name="lock" size={20} color="#fff" />
+                  <Text style={styles.loginButtonText}>Login</Text>
+                  <MaterialIcons name="arrow-forward" size={20} color="#fff" />
                 </>
               )}
             </TouchableOpacity>
 
-
+            <TouchableOpacity
+              style={styles.adminLink}
+              onPress={goToAdminLogin}
+              disabled={loading}
+            >
+              <Text style={styles.adminLinkText}>Admin Login </Text>
+              <MaterialIcons name="arrow-forward" size={20} color="#f77206" />
+            </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
@@ -159,26 +163,14 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: "center",
   },
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   logoContainer: {
     alignItems: "center",
     marginBottom: 20,
   },
   logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: "#fff",
   },
   title: {
@@ -225,14 +217,14 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 15, color: "#333", paddingVertical: 12 },
   loginButton: {
-    backgroundColor: "#f55313",
+    backgroundColor: "#F97316",
     borderRadius: 12,
     paddingVertical: 15,
     paddingHorizontal: 20,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#ee4705",
+    shadowColor: "#F97316",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -245,12 +237,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginRight: 10,
   },
-  demoHint: {
+  adminLink: {
     marginTop: 20,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
   },
-  demoText: {
-    color: "#999",
-    fontSize: 12,
+  adminLinkText: {
+    color: "#F97316",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

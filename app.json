@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "BMG_CUSTOMER",
-    "slug": "BMG_CUSTOMER",
+    "slug": "bmg-customer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/BMG.png",
@@ -48,8 +48,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "30100d0b-8495-424f-a7e5-cb0512fc9914"
+        "projectId": "f2f4d76a-b49a-48d3-a704-11c59b7cd5b0"
       }
-    }
+    },
+    "owner": "kiruba08"
   }
 }

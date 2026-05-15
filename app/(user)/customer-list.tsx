@@ -1,4 +1,4 @@
-// app/(admin)/customer-list.tsx
+// app/(user)/customer-list.tsx
 // @ts-nocheck
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -25,6 +25,7 @@ import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import * as XLSX from "xlsx";
 import { CustomerService } from "../../src/service/CustomerService";
+import { useAuth } from "../../src/contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
 
@@ -298,6 +299,9 @@ const dpStyles = StyleSheet.create({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function CustomerList() {
+  const { user } = useAuth();
+  const userName = user?.name || "";
+
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -418,12 +422,14 @@ export default function CustomerList() {
     }
   };
 
-  // Load customers
+  // Load customers — always filtered by logged-in user
   const loadCustomers = useCallback(async (filterKey = null, filterValue = null, fd = null, td = null) => {
     try {
       setLoading(true);
-      const key = filterKey ? FILTER_KEY_MAP[filterKey] : null;
-      const value = filterValue || null;
+      // Always pass createdby=userName as base filter
+      // If additional search, use that key/value; otherwise use createdby
+      const key = filterKey ? FILTER_KEY_MAP[filterKey] : "U";
+      const value = filterKey ? filterValue : userName;
       const res = await CustomerService.getCustomers(key, value, fd, td);
       if (res && res.success && Array.isArray(res.data)) {
         const mappedData = res.data.map((item) => ({
@@ -457,7 +463,7 @@ export default function CustomerList() {
     }
   }, []);
 
-  useEffect(() => { loadCustomers(); }, []);
+  useEffect(() => { if (userName) loadCustomers(); }, [userName]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -737,7 +743,6 @@ const generateExcel = async () => {
               { value: "area", label: "Area", icon: "place" },
               { value: "city", label: "City", icon: "location-city" },
               { value: "pincode", label: "Pin Code", icon: "pin-drop" },
-              { value: "createdby", label: "Created By", icon: "person-add" },
             ].map((filter) => (
               <TouchableOpacity
                 key={filter.value}

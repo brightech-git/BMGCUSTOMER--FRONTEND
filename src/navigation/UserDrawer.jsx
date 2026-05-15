@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
+import CustomerList from "../../app/(user)/customer-list";
 
 const logo = require("../../assets/logo.png");
 
@@ -69,7 +70,18 @@ function CustomDrawerContent(props) {
           }}
         >
           <Icon name="person" size={24} color="#F97316" />
-          <Text style={styles.menuText}>Customer</Text>
+          <Text style={styles.menuText}>Customer Creation</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => {
+            router.push("/(user)/customer-list");
+            navigation.closeDrawer();
+          }}
+        >
+          <Icon name="people" size={24} color="#F97316" />
+          <Text style={styles.menuText}>Customer List</Text>
         </TouchableOpacity>
       </View>
 
@@ -96,7 +108,7 @@ export default function UserDrawer() {
         headerTitleAlign: "center",
       }}
     >
-      <Drawer.Screen name="customer" options={{ title: "Customer" }} />
+      <Drawer.Screen name="customer" options={{ title: "Customer Creation" }} />
     </Drawer>
   );
 }
